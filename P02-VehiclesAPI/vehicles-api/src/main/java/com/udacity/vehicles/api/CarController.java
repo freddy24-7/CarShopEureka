@@ -1,8 +1,8 @@
 package com.udacity.vehicles.api;
 
-
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import static org.springframework.http.ResponseEntity.noContent;
 
 import com.udacity.vehicles.domain.car.Car;
 import com.udacity.vehicles.service.CarService;
@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
@@ -31,10 +32,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/cars")
 class CarController {
 
+    @Autowired
     private final CarService carService;
     private final CarResourceAssembler assembler;
 
-    CarController(CarService carService, CarResourceAssembler assembler) {
+    public CarController(CarService carService, CarResourceAssembler assembler) {
         this.carService = carService;
         this.assembler = assembler;
     }
@@ -56,14 +58,19 @@ class CarController {
      * @param id the id number of the given vehicle
      * @return all information for the requested vehicle
      */
+    /**
+     * IMPLEMENTED: Use the `findById` method from the Car Service to get car information.
+     * IMPLEMENTED: Use the `assembler` on that car and return the resulting output.
+     *   Update the first line as part of the above implementing.
+     */
+
     @GetMapping("/{id}")
     Resource<Car> get(@PathVariable Long id) {
-        /**
-         * TODO: Use the `findById` method from the Car Service to get car information.
-         * TODO: Use the `assembler` on that car and return the resulting output.
-         *   Update the first line as part of the above implementing.
-         */
-        return assembler.toResource(new Car());
+        //Using the findById method from the Car Service to get car information
+        Car car = carService.findById(id);
+
+        //Using the assembler on that car and return the resulting output
+        return assembler.toResource(car);
     }
 
     /**
@@ -72,32 +79,44 @@ class CarController {
      * @return response that the new vehicle was added to the system
      * @throws URISyntaxException if the request contains invalid fields or syntax
      */
+    /**
+     * IMPLEMENTED: Use the `save` method from the Car Service to save the input car.
+     * IMPLEMENTED: Use the `assembler` on that saved car and return as part of the response.
+     *   Update the first line as part of the above implementing.
+     */
+
     @PostMapping
-    ResponseEntity<?> post(@Valid @RequestBody Car car) throws URISyntaxException {
-        /**
-         * TODO: Use the `save` method from the Car Service to save the input car.
-         * TODO: Use the `assembler` on that saved car and return as part of the response.
-         *   Update the first line as part of the above implementing.
-         */
-        Resource<Car> resource = assembler.toResource(new Car());
-        return ResponseEntity.created(new URI(resource.getId().expand().getHref())).body(resource);
+    ResponseEntity<Resource<Car>> post(@Valid @RequestBody Car car) throws URISyntaxException {
+        //Using the save method from the Car Service to save the input car
+        Car savedCar = carService.save(car);
+
+        //Using the assembler on the saved car and return as part of the response
+        Resource<Car> resource = assembler.toResource(savedCar);
+
+        //Creating a location URI for the newly created resource
+        URI location = new URI(resource.getId().expand().getHref());
+
+        //Returning a ResponseEntity with CREATED status and location header
+        return ResponseEntity.created(location).body(resource);
     }
 
     /**
-     * Updates the information of a vehicle in the system.
-     * @param id The ID number for which to update vehicle information.
-     * @param car The updated information about the related vehicle.
-     * @return response that the vehicle was updated in the system
+     *  Updates the information of a vehicle in the system.
+     *  @param id The ID number for which to update vehicle information.
+     *  @param car The updated information about the related vehicle.
+     *  @return response that the vehicle was updated in the system
+     * IMPLEMENTED: Set the id of the input car object to the `id` input.
+     * IMPLEMENTED: Save the car using the `save` method from the Car service
+     * IMPLEMENTED: Use the `assembler` on that updated car and return as part of the response.
+     *   Update the first line as part of the above implementing.
      */
+
     @PutMapping("/{id}")
     ResponseEntity<?> put(@PathVariable Long id, @Valid @RequestBody Car car) {
-        /**
-         * TODO: Set the id of the input car object to the `id` input.
-         * TODO: Save the car using the `save` method from the Car service
-         * TODO: Use the `assembler` on that updated car and return as part of the response.
-         *   Update the first line as part of the above implementing.
-         */
-        Resource<Car> resource = assembler.toResource(new Car());
+
+        car.setId(id);
+        Car newCar = this.carService.save(car);
+        Resource<Car> resource = assembler.toResource(newCar);
         return ResponseEntity.ok(resource);
     }
 
@@ -106,11 +125,17 @@ class CarController {
      * @param id The ID number of the vehicle to remove.
      * @return response that the related vehicle is no longer in the system
      */
+    /**
+     * IMPLEMENTED: Use the Car Service to delete the requested vehicle.
+     */
+
     @DeleteMapping("/{id}")
     ResponseEntity<?> delete(@PathVariable Long id) {
-        /**
-         * TODO: Use the Car Service to delete the requested vehicle.
-         */
-        return ResponseEntity.noContent().build();
+        // Use the Car Service to delete the requested vehicle
+        carService.delete(id);
+
+        // Return a ResponseEntity with NO_CONTENT status
+        return noContent().build();
     }
+
 }
