@@ -28,7 +28,7 @@ public class PricingServiceApplicationTests {
 	public void testGetPriceByIdNotFound() throws Exception {
 		MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
 
-		Long vehicleId = 100L; // Assuming this ID is not in the map
+		Long vehicleId = 100L;
 		mockMvc.perform(MockMvcRequestBuilders.get("/services/price")
 						.param("vehicleId", String.valueOf(vehicleId))
 						.contentType(MediaType.APPLICATION_JSON))

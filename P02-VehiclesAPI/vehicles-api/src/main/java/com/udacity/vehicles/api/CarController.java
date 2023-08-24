@@ -1,31 +1,26 @@
 package com.udacity.vehicles.api;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-import static org.springframework.http.ResponseEntity.noContent;
-
 import com.udacity.vehicles.domain.car.Car;
 import com.udacity.vehicles.service.CarService;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.validation.Valid;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import static org.springframework.http.ResponseEntity.noContent;
 
 /**
  * Implements a REST-based controller for the Vehicles API.
@@ -48,6 +43,14 @@ class CarController {
      * @return list of vehicles
      */
     @GetMapping
+    @Operation(summary = "This API retrieves a list of all cars.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "List of cars retrieved successfully",
+                    content = {@Content(mediaType = "application/json")}),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal server error")
+    })
     Resources<Resource<Car>> list() {
         List<Resource<Car>> resources = carService.list().stream().map(assembler::toResource)
                 .collect(Collectors.toList());
@@ -67,6 +70,18 @@ class CarController {
      */
 
     @GetMapping("/{id}")
+    @Operation(summary = "This API retrieves a specific car "
+            + "based on the id of the car.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "car details retrieved successfully",
+                    content = {@Content(mediaType = "application/json")}),
+            @ApiResponse(responseCode = "404",
+                    description =
+                            "Car not found with id:"),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal server error")
+    })
     Resource<Car> get(@PathVariable Long id) {
         //Using the findById method from the Car Service to get car information
         Car car = carService.findById(id);
@@ -88,6 +103,14 @@ class CarController {
      */
 
     @PostMapping
+    @Operation(summary = "This API adds a new car")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201",
+                    description = "Car object created successfully",
+                    content = {@Content(mediaType = "application/json")}),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal server error")
+    })
     ResponseEntity<Resource<Car>> post(@Valid @RequestBody Car car) throws URISyntaxException {
         //Using the save method from the Car Service to save the input car
         Car savedCar = carService.save(car);
@@ -114,6 +137,16 @@ class CarController {
      */
 
     @PutMapping("/{id}")
+    @Operation(summary = "This API updates the details of a car")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Car details successfully updated",
+                    content = {@Content(mediaType = "application/json")}),
+            @ApiResponse(responseCode = "404",
+                    description = "No car object found for that id"),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal server error")
+    })
     ResponseEntity<?> put(@PathVariable Long id, @Valid @RequestBody Car car) {
 
         car.setId(id);
@@ -132,6 +165,16 @@ class CarController {
      */
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "This API allows the deletion of a car object")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204",
+                    description = "Car object successfully deleted",
+                    content = {@Content(mediaType = "application/json")}),
+            @ApiResponse(responseCode = "404",
+                    description = "No car object found for that id"),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal server error")
+    })
     ResponseEntity<?> delete(@PathVariable Long id) {
         // Use the Car Service to delete the requested vehicle
         carService.delete(id);
