@@ -1,18 +1,13 @@
 package com.udacity.vehicles.api;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.udacity.vehicles.client.maps.MapsClient;
-import com.udacity.vehicles.client.prices.PriceClient;
 import com.udacity.vehicles.domain.Condition;
 import com.udacity.vehicles.domain.Location;
 import com.udacity.vehicles.domain.car.Car;
@@ -20,7 +15,9 @@ import com.udacity.vehicles.domain.car.Details;
 import com.udacity.vehicles.domain.manufacturer.Manufacturer;
 import com.udacity.vehicles.service.CarService;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +30,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 /**
  * Implements testing of the CarController class.
@@ -52,12 +51,6 @@ public class CarControllerTest {
     @MockBean
     private CarService carService;
 
-    @MockBean
-    private PriceClient priceClient;
-
-    @MockBean
-    private MapsClient mapsClient;
-
     /**
      * Creates pre-requisites for testing, such as an example car.
      */
@@ -74,54 +67,76 @@ public class CarControllerTest {
      * Tests for successful creation of new car in the system
      * @throws Exception when car creation fails in the system
      */
-//    @Test
-//    public void createCar() throws Exception {
-//        Car car = getCar();
-//        mvc.perform(
-//                post(new URI("/cars"))
-//                        .content(json.write(car).getJson())
-//                        .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                        .accept(MediaType.APPLICATION_JSON_UTF8))
-//                .andExpect(status().isCreated());
-//    }
+    @Test
+    public void createCar() throws Exception {
+        Car car = getCar();
+        mvc.perform(
+                post(new URI("/cars"))
+                        .content(json.write(car).getJson())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isCreated());
+    }
 
     /**
      * Tests if the read operation appropriately returns a list of vehicles.
      * @throws Exception if the read operation of the vehicle list fails
+     * IMPLEMENTED: Add a test to check that the `get` method works by calling
      */
     @Test
     public void listCars() throws Exception {
-        /**
-         * TODO: Add a test to check that the `get` method works by calling
-         *   the whole list of vehicles. This should utilize the car from `getCar()`
-         *   below (the vehicle will be the first in the list).
-         */
+        //Creating a mock car object
+        Car car = getCar();
+        car.setId(1L);
 
+        //Mocking the behavior of the carService
+        when(carService.list()).thenReturn(Arrays.asList(car));
+
+        //Performing the GET request to fetch the list of cars
+        mvc.perform(MockMvcRequestBuilders.get("/cars"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$._embedded.carList[0].id").value(1L));
     }
 
     /**
      * Tests the read operation for a single car by ID.
      * @throws Exception if the read operation for a single car fails
+     * IMPLEMENTED: Add a test to check that the `get` method works by calling
      */
+
     @Test
     public void findCar() throws Exception {
-        /**
-         * TODO: Add a test to check that the `get` method works by calling
-         *   a vehicle by ID. This should utilize the car from `getCar()` below.
-         */
+        //Creating a mock car object
+        Car car = new Car();
+        car.setId(1L);
+
+        //Mocking the behavior of the carService
+        when(carService.findById(1L)).thenReturn(car);
+
+        //Performing the GET request to fetch the car by ID
+        mvc.perform(MockMvcRequestBuilders.get("/cars/1"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(jsonPath("$.id").value(1L));
     }
 
     /**
      * Tests the deletion of a single car by ID.
      * @throws Exception if the delete operation of a vehicle fails
+     * IMPLEMENTED: Add a test to check whether a vehicle is appropriately deleted
      */
     @Test
     public void deleteCar() throws Exception {
-        /**
-         * TODO: Add a test to check whether a vehicle is appropriately deleted
-         *   when the `delete` method is called from the Car Controller. This
-         *   should utilize the car from `getCar()` below.
-         */
+        //Creating a mock car object
+        Car car = new Car();
+        car.setId(1L);
+
+        //Mocking the behavior of the carService
+        when(carService.findById(1L)).thenReturn(car);
+        doNothing().when(carService).delete(1L);
+
+        //Performing the DELETE request to delete the car by ID
+        mvc.perform(MockMvcRequestBuilders.delete("/cars/1"))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
     /**
